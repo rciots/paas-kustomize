@@ -85,11 +85,11 @@ app.get('/:id', (req, res) => {
                                   }
                                   const commandResources = "oc kustomize /tmp/manifests/" + foundDevice._id + "/device > /tmp/manifests/" + foundDevice._id + "/device/resources/resources.yaml";
                                   exec(commandResources, (errorR, stdoutR, stderrR) => {
-                                    if (error) {
+                                    if (errorR) {
                                       console.error(`Error executing command: ${errorR.message}`);
                                       return;
                                     }
-                                    if (stderr) {
+                                    if (stderrR) {
                                       console.error(`Command stderr: ${stderrR}`);
                                       return;
                                     }
