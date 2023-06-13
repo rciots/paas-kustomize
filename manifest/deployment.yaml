@@ -1,0 +1,74 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: paas-kustomize
+  labels:
+    app: paas-kustomize
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paas-kustomize
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: paas-kustomize
+    spec:
+      initContainers:
+        - resources: {}
+          terminationMessagePath: /dev/termination-log
+          name: download-custom-tools
+          command:
+            - sh
+            - '-c'
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: custom-tools
+              mountPath: /custom-tools
+          terminationMessagePolicy: File
+          image: 'quay.io/openshift/origin-cli:latest'
+          args:
+            - cp /usr/bin/oc /custom-tools/oc
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext: {}
+      volumes:
+        - name: custom-tools
+          emptyDir: {}
+      containers:
+        - resources: {}
+          volumeMounts:
+            - name: custom-tools
+              mountPath: /usr/local/bin/oc
+              subPath: oc
+          terminationMessagePath: /dev/termination-log
+          name: paas-kustomize
+          env:        
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: paas-kustomize
+                  key: PORT
+            - name: MONGODB_CONNECT
+              valueFrom:
+                configMapKeyRef:
+                  name: paas-kustomize
+                  key: MONGODB_CONNECT
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          securityContext: {}
+          imagePullPolicy: Always
+          terminationMessagePolicy: File
+          image: >-
+            quay.io/rciots/paas-kustomize:latest
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
