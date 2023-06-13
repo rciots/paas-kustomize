@@ -19,6 +19,11 @@ db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function() {
   console.log('Database connected!');
 });
+try {
+  fs.mkdirSync("/tmp/manifests");
+} catch (error) {
+  console.error('Error creating directory:', error);
+}
 app.get('/:id', (req, res) => {
     const id = req.params.id;
     if (id == "favicon.ico"){
@@ -32,20 +37,20 @@ app.get('/:id', (req, res) => {
                 return res.json({ send: false, message: 'Device not found' });
             }
             var sendFiles = false;
-            fs.mkdir("./tmp/" + foundDevice._id + "/device", { recursive: true }, (error) => {
+            fs.mkdir("/tmp/manifests/" + foundDevice._id + "/device", { recursive: true }, (error) => {
                 if (error) {
                     console.error('Error creating directory:', error);
-                    return res.json({ send: false, message: 'Error creating directory: ./tmp/' + foundDevice._id + "/device"});
+                    return res.json({ send: false, message: 'Error creating directory: /tmp/manifests/' + foundDevice._id + "/device"});
                 } else {
-                    fs.mkdir("./tmp/" + foundDevice._id + "/base", { recursive: true }, (error) => {
+                    fs.mkdir("/tmp/manifests/" + foundDevice._id + "/base", { recursive: true }, (error) => {
                         if (error) {
                           console.error('Error creating directory:', error);
-                          return res.json({ send: false, message: 'Error creating directory: ./tmp/' + foundDevice._id + "/base"});
+                          return res.json({ send: false, message: 'Error creating directory: /tmp/manifests/' + foundDevice._id + "/base"});
                         } else {
                             foundDevice.files.forEach((obj) => {
                               sendFiles = true;
                                 const { name, content } = obj;
-                                fs.writeFile("./tmp/" + foundDevice._id + "/device/" + name, content, (err) => {
+                                fs.writeFile("/tmp/manifests/" + foundDevice._id + "/device/" + name, content, (err) => {
                                   if (err) {
                                     console.error(`Error creating file ${name}:`, err);
                                   }
@@ -62,7 +67,7 @@ app.get('/:id', (req, res) => {
                                   foundTemplate.files.forEach((obj) => {
                                       sendFiles = true;
                                       const { name, content } = obj;
-                                      fs.writeFile("./tmp/" + foundDevice._id + "/base/" + name, content, (err) => {
+                                      fs.writeFile("/tmp/manifests/" + foundDevice._id + "/base/" + name, content, (err) => {
                                         if (err) {
                                           console.error(`Error creating file ${name}:`, err);
                                         }
@@ -71,14 +76,14 @@ app.get('/:id', (req, res) => {
                                 }
                                 if (sendFiles){
                                   try {
-                                    fs.mkdirSync("tmp/" + foundDevice._id + "/device/resources");
+                                    fs.mkdirSync("/tmp/manifests/" + foundDevice._id + "/device/resources");
                                   } catch (error) {
                                     console.error('Error creating directory:', error);
                                   }
-                                  if (!fs.existsSync("tmp/" + foundDevice._id + "/device/kustomization.yaml")) {
-                                    fs.writeFileSync("tmp/" + foundDevice._id + "/device/kustomization.yaml", 'resources:\n  - ../base');
+                                  if (!fs.existsSync("/tmp/manifests/" + foundDevice._id + "/device/kustomization.yaml")) {
+                                    fs.writeFileSync("/tmp/manifests/" + foundDevice._id + "/device/kustomization.yaml", 'resources:\n  - ../base');
                                   }
-                                  const commandResources = "oc kustomize tmp/" + foundDevice._id + "/device > tmp/" + foundDevice._id + "/device/resources/resources.yaml";
+                                  const commandResources = "oc kustomize /tmp/manifests/" + foundDevice._id + "/device > /tmp/manifests/" + foundDevice._id + "/device/resources/resources.yaml";
                                   exec(commandResources, (errorR, stdoutR, stderrR) => {
                                     if (error) {
                                       console.error(`Error executing command: ${errorR.message}`);
@@ -88,8 +93,8 @@ app.get('/:id', (req, res) => {
                                       console.error(`Command stderr: ${stderrR}`);
                                       return;
                                     }
-                                    fs.writeFileSync("tmp/" + foundDevice._id + "/device/resources/kustomization.yaml", 'resources:\n  - resources.yaml\n\ncommonLabels:\n  rciots-managed: "True"');
-                                    const command = "oc kustomize tmp/" + foundDevice._id + "/device/resources";
+                                    fs.writeFileSync("/tmp/manifests/" + foundDevice._id + "/device/resources/kustomization.yaml", 'resources:\n  - resources.yaml\n\ncommonLabels:\n  rciots-managed: "True"');
+                                    const command = "oc kustomize /tmp/manifests/" + foundDevice._id + "/device/resources";
                                     exec(command, (error, stdout, stderr) => {
                                       if (error) {
                                         console.error(`Error executing command: ${error.message}`);
@@ -110,18 +115,18 @@ app.get('/:id', (req, res) => {
                                           v : foundDevice.__v + foundTemplate.__v,
                                           manifest : base64Data
                                         }
-                                        fs.writeFile("tmp/" + foundDevice._id + "/metadata.json", JSON.stringify(metadata), (writeErr) => {
+                                        fs.writeFile("/tmp/manifests/" + foundDevice._id + "/metadata.json", JSON.stringify(metadata), (writeErr) => {
                                           if (writeErr) {
                                             console.error(`Error writing metadata to file: ${writeErr.message}`);
                                             return;
                                           }
-                                          fs.rm("tmp/" + foundDevice._id + "/base",
+                                          fs.rm("/tmp/manifests/" + foundDevice._id + "/base",
                                           { recursive: true, force: true }, (err) => {
                                             if (err) {
                                             return console.log("An error occurred while deleting the directory.", err);
                                             }
                                           });
-                                          fs.rm("tmp/" + foundDevice._id + "/device",
+                                          fs.rm("/tmp/manifests/" + foundDevice._id + "/device",
                                           { recursive: true, force: true }, (err) => {
                                             if (err) {
                                             return console.log("An error occurred while deleting the directory.", err);
