@@ -114,9 +114,14 @@ app.get('/:id', (req, res) => {
                                           return;
                                         }
                                         const base64Data = compressedData.toString('base64');
-                                        
+                                        var versionTemplate;
+                                        if (foundTemplate){
+                                          versionTemplate = foundDevice.__v + foundTemplate.__v;
+                                        } else {
+                                          versionTemplate = foundDevice.__v;
+                                        }
                                         const metadata = {
-                                          v : foundDevice.__v + foundTemplate.__v,
+                                          v : versionTemplate,
                                           manifest : base64Data
                                         }
                                         fs.writeFile("/tmp/manifests/" + foundDevice._id + "/metadata.json", JSON.stringify(metadata), (writeErr) => {

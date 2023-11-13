@@ -48,14 +48,34 @@ spec:
           env:        
             - name: PORT
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: paas-kustomize
                   key: PORT
-            - name: MONGODB_CONNECT
+            - name: MONGODB_DB
               valueFrom:
-                configMapKeyRef:
+                secretKeyRef:
                   name: paas-kustomize
-                  key: MONGODB_CONNECT
+                  key: MONGODB_DB
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: paas-kustomize
+                  key: MONGODB_PASSWORD
+            - name: MONGODB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: paas-kustomize
+                  key: MONGODB_PORT
+            - name: MONGODB_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: paas-kustomize
+                  key: MONGODB_SERVER
+            - name: MONGODB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: paas-kustomize
+                  key: MONGODB_USER
           ports:
             - containerPort: 8080
               protocol: TCP
