@@ -8,7 +8,11 @@ const Device = require('./models/schemas').Device;
 const Template = require('./models/schemas').Template; 
 const PORT = process.env.PORT || 8080;
 
-const mongodb = process.env.MONGODB_CONNECT || 'mongodb://mongodb:27017/userdb';
+var mongodb = 'mongodb://localhost:27017/userdb';
+if (process.env.MONGODB_USER && process.env.MONGODB_PASSWORD && process.env.MONGODB_SERVER && process.env.MONGODB_PORT && process.env.MONGODB_DB) {
+  mongodb = 'mongodb://' + process.env.MONGODB_USER + ':' + process.env.MONGODB_PASSWORD + '@' + process.env.MONGODB_SERVER + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB;
+}
+
 
 mongoose.connect(mongodb, {
   useNewUrlParser: true,
